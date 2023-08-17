@@ -1,12 +1,12 @@
 
-import TextBox from './text';
 import Scrollbox from './scrollbox';
 import ButtonContainer from './buttonContainer';
+import Overlay from './overlay';
 
-import * as THREE from 'three'
-import {CSS2DRenderer, CSS2DObject} from 'three-css2drender'
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 
 import ForceGraph3D from 'react-force-graph-3d'
+import useKeypress from 'react-use-keypress';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -48,20 +48,31 @@ const testButtons = ["button1", "button2", "button3", 'button4', 'button5']
 
 function App() {
 
-  const css2dRenderer = new CSS2DRenderer();
-  
+
+
+
+  const css2renderGuy = [new CSS2DRenderer()];
+
   const [jsonObject, setJsonObject] = useState(test3dNode)
   const [currentNode, setNode] = useState(null)
   const [currentButtons, setButtons] = useState(testButtons)
   const [currentText, setText] = useState(testEntries)
+  const [currentKeyPress, setKeypress] = useState(null)
+  const [currentNodeName, setNodeName] = useState("")
+  const [currentToggle, setToggle] = useState(true)
+
+  const allowedKeys = ['n']
+
+  useKeypress(allowedKeys, (event) => {
+    if (currentKeyPress != event.key) { setKeypress(event.key) }
+
+
+  });
 
   const fgRef = useRef()
 
-
-
-
   const handleRightClick = useCallback(node => {
-    console.log('egg')
+
     const distance = 100;
     const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
 
@@ -77,33 +88,42 @@ function App() {
   })
 
   const handleClick = useCallback(node => {
-
     setButtons(Object.keys(node))
     setNode(node)
-    
-
-
+    setNodeName(node.name)
   })
 
-  const handleNotes = useCallback(()=>{
-    const node = currentNode
-    console.log(node)
-    if (node.notes) {
-      const notesArray = node.notes.map(notes => notes.content )
-      setText(notesArray)
-      console.log(notesArray)
+  const handleNewNode = useCallback((event) => {
+    if (currentKeyPress == 'n') {
+      console.log(jsonObject.nodes)
+    }
+  })
 
+
+  const handleNotes = useCallback(() => {
+    const node = currentNode
+
+    if (node.notes) {
+      const notesArray = node.notes.map(notes => notes.content)
+      setText(notesArray)
     } else {
       setText([])
     }
   })
 
   const testFunctions = [handleNotes, null, null, null, null]
+  function testUp() {
+    setKeypress(null)
+  }
 
+  function toggleLabels() {
+    if (currentToggle == true) {
+      setToggle(false)
+    } else {
+      setToggle(true)
+    }
+  }
 
-  useEffect(()=>{
-
-  },[currentText])
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -116,32 +136,52 @@ function App() {
 
       setJsonObject(jsonData)
 
-   
+
     };
 
     reader.readAsText(file);
   };
 
-  /* useEffect(()=>{
-  
-    if(jsonObject){
-      
-    }
-  }, [jsonObject]); */
 
   return (
     <div className="root">
+
       <div className="maincontainer">
         <input type="file" accept='.json' onChange={handleFileUpload} />
         <div className='datacontainer'>
-          <ButtonContainer buttonArray={currentButtons} buttonFunction={handleNotes}/>
+          
+          <div >
+          <label for="myCheckbox" className='myCheckbox'>Hide labels?</label>
+          <input type="checkbox" id="myCheckbox" name="myCheckbox" onChange={toggleLabels} />
+          </div>
+          <Overlay nodeName={currentNodeName} />
+          <ButtonContainer buttonArray={currentButtons} buttonFunction={handleNotes} />
           <Scrollbox textEntries={currentText} />
         </div>
-        <div className='graphicscontainer'>
-          <ForceGraph3D ref={fgRef} graphData={jsonObject} onNodeRightClick={handleRightClick} onNodeClick={handleClick}
-          
+        <div className='graphicscontainer' tabIndex={1} onKeyUp={testUp}>
+          <ForceGraph3D extraRenderers={css2renderGuy} ref={fgRef} graphData={jsonObject}
+
+            onNodeRightClick={handleRightClick}
+            onNodeClick={handleClick}
+            onBackgroundClick={handleNewNode}
+
+            nodeThreeObject={node => {
+              const nodeEl = document.createElement('div');
+              nodeEl.textContent = node.label;
+              nodeEl.style.color = '#e5e5e5';
+              nodeEl.style.size = 8;
+              {currentToggle ? nodeEl.style.opacity = .9 : nodeEl.style.opacity = 0}
+              nodeEl.className = 'node-label';
+              return new CSS2DObject(nodeEl);
+            }}
+            nodeThreeObjectExtend={true}
+            nodeColor={'#e5e5e5'}
+            backgroundColor='#000000'
+            linkDirectionalArrowLength={4}
+            linkDirectionalArrowRelPos={1}
+
           />
-          
+
         </div>
 
       </div>
