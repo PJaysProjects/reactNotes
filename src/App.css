@@ -57,7 +57,7 @@ textarea {
 
 /* For the main scrollbar track */
 ::-webkit-scrollbar {
-  width: 0px; /* Width of the scrollbar */
+  width: 5px; /* Width of the scrollbar */
   height: 5px;
 }
 
@@ -112,4 +112,10 @@ button {
 
 .myCheckbox {
   color:#E5E5E5;
+}
+
+.maincontainer {
+  background-color: #000000;
+  color: #E5E5E5;
+
 }

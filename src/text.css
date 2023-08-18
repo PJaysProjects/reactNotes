@@ -1,7 +1,5 @@
-.textbox {
-    
+.textbox {  
     position: relative;
-
     
     z-index: 2;
 
@@ -11,8 +9,9 @@
     font-size: 14px;
     color: #E5E5E5;
 
+    overflow: auto;
     
-    min-height: 38px;
+    min-height: 100px;
     padding: 5px;
     margin: 5px;
 
