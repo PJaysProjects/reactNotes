@@ -1,15 +1,14 @@
 import TextBox from "./text";
 import './text.css'
 
-function Scrollbox({textEntries}){
-
-    const data = textEntries.map((text,index) => <TextBox text={text} key={index}/>)
+const Scrollbox = ({textEntries,editHandler,toggler}) => {
+    
+    var data = textEntries.map((text,index) => <TextBox text={text} key={index} id={index} handler={editHandler}/>)
     
     return (
         <div className="scrollbox">
-           {data}
+           {toggler ? data : null}
         </div>
-
     )
 }
 

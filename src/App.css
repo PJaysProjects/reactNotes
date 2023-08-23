@@ -57,8 +57,8 @@ textarea {
 
 /* For the main scrollbar track */
 ::-webkit-scrollbar {
-  width: 5px; /* Width of the scrollbar */
-  height: 5px;
+  width: 10px; /* Width of the scrollbar */
+  height: 10px;
 }
 
 /* For the scrollbar handle */
@@ -76,21 +76,9 @@ button {
   background-color: #000000;
 }
 
-.custombutton.button-toggled,
-.custombutton.button-toggled:focus,
-.custombutton.button-toggled:hover {
+.button-toggled {
     background-color: #961f1f;
     /* Apply shading color when toggled */
-}
-
-.active {
-  background-color: red;
-  color: #E5E5E5;
-}
-
-.inactive {
-  background-color: #000000;
-  color: #E5E5E5;
 }
 
 .node-label {
@@ -119,3 +107,7 @@ button {
   color: #E5E5E5;
 
 }
+
+/* .buttoncontainer {
+  height: 75px;
+} */

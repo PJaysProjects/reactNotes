@@ -1,15 +1,24 @@
+import React, {useState } from 'react'
 import './buttons.css'
 
-function CustomButton({ buttonName, buttonFunction }) {
+const CustomButton = ({ buttonName, buttonFunction, buttonHandler, isActive }) => {
 
-    /*     const [isActive, setIsActive] = useState(false)
+       /*  const [isActive, setIsActive] = useState(true) */
     
         const toggler = () => {
-            setIsActive(prevState => !prevState)
+            console.log('closer to home (button)')
+            console.log(isActive)
+           /*  setIsActive(prevState => !prevState) */
+            isActive = !isActive
+            return isActive
         }
-     */
+    
         return (
-            <button className='custombutton' id={buttonName} onClick={buttonFunction}>
+            <button className={isActive ? 'button-toggled': 'custombutton'} id={buttonName} onClick={(event)=>{
+            
+            buttonHandler(event,toggler())
+            buttonFunction()
+            }}>
                 {buttonName} 
             </button>
         )

@@ -27,12 +27,13 @@ const test3dNode = {
       "id": "id1",
       "name": "name1",
       "val": 1,
-      'text': ['whoa....', 'what do we have here?']
+      'notes': [{ content: 'whoa....' }, { content: 'what do we have here?' }, { content: "hopefully \n something \n cool" }]
     },
     {
       "id": "id2",
       "name": "name2",
-      "val": 10
+      "val": 10,
+      'notes': [{ content: "hello there" }]
     }
   ],
   "links": [
@@ -46,8 +47,20 @@ const test3dNode = {
 
 
 
-function App() {
+const App = () => {
+
   const css2renderGuy = [new CSS2DRenderer()];
+
+  const queueObject = {
+    'n': [],
+    'c': [],
+    'none': []
+
+  }
+
+  const buttonToggleObject = {
+
+  }
 
   const [jsonObject, setJsonObject] = useState(test3dNode)
   const [currentNode, setNode] = useState(null)
@@ -55,13 +68,18 @@ function App() {
   const [currentText, setText] = useState([])
   const [currentKeyPress, setKeypress] = useState(null)
   const [currentNodeName, setNodeName] = useState("")
-  const [currentToggle, setToggle] = useState(true)
-  const [currentNodeQueue,setNodeQueue] = useState(new Set())
+  const [currentLabelToggle, setLabelToggle] = useState(true)
+  const [currentContentToggle, setContentToggle] = useState(false)
+  const [currentNodeQueue, setNodeQueue] = useState(queueObject)
+  const [currentButtonToggles, setButtonToggles] = useState(buttonToggleObject)
+
 
   const colorMap = {
     default: '#e5e5e5',
     highlighted: '#00E5E5',
-    connecting: '#00E553'
+    connecting: '#00E553',
+    sunny: '#FFEBB0',
+    pale: '#e5e5e5'
   }
 
   //keys
@@ -69,7 +87,6 @@ function App() {
 
   function testUp() {
     setKeypress(null)
-    
   }
 
   useKeypress(allowedKeys, (event) => {
@@ -96,112 +113,145 @@ function App() {
       newPos, node, 1000
     )
 
+    const cameraConfig = [newPos, node, 1000]
+
+    var queueObject = currentNodeQueue
+    queueObject['none'].push(cameraConfig)
+    setNodeQueue(queueObject)
 
   })
 
   //--Inspect Node. Get Buttons/attributes. Show name in input field
   const handleClick = useCallback(node => {
+    console.log("keypress")
+    console.log(currentKeyPress)
+    var queueObject = currentNodeQueue
+
     if (currentKeyPress === null) {
+
       setButtons(Object.keys(node))
       setNode(node)
       setNodeName(node.name)
+      if (node !== null) {
+        if (node.notes) {
+          const notesArray = node.notes.map(notes => notes.content)
+          setText(notesArray)
+        }
+      }
     }
-    if (currentKeyPress == 'c') {
 
-      //change color, works but doesn't work at the same time
-      console.log(node.color)
-      console.log(node)
-      node.color = '#61FF3E'
-      jsonObject.nodes[node.index] = node
-      setNode(node)
-      setNodeName(node.name)
-      
-      //boilerplate to reload the nodes (look into solutions for this)
-      var nodes = jsonObject.nodes
-      var links = jsonObject.links
-      var newNodes = nodes
-      var newLinks = links
-      setJsonObject({ nodes: newNodes, links: newLinks }) 
+    if (currentKeyPress === 'c') {
+
+      if (queueObject['c'].length == 0) {
+
+        //change color, works but doesn't work at the same time
+        node.color = colorMap.connecting
+
+        //and now I discover this node will change just like that
+
+        queueObject['c'].push(node)
+        setKeypress(null)
+
+      } else if (queueObject['c'].length == 1) {
+
+        node.color = colorMap.default
+        var previousNode = queueObject['c'].shift()
+
+        previousNode.color = colorMap.default
+
+        if (node !== previousNode) {
+
+
+          var newLink = { source: previousNode.id, target: node.id }
+
+          var [newNodes, newLinks] = initialize(jsonObject)
+
+          newNodes[node.index] = node
+
+          var newLinks = [...newLinks, newLink]
+
+
+          setJsonObject({ nodes: newNodes, links: newLinks })
+          setKeypress(null)
+
+        }
+        setNodeQueue(queueObject)
+      }
+
+
     }
   })
 
-  function createNode(){}
-
-
   //pretty stuff
   useEffect(() => {
+    console.log("hi there")
+    console.dir(<ForceGraph3D />)
+    //console.log(document.getElementsByClassName('node-label'))
     const bloomPass = new UnrealBloomPass();
     bloomPass.strength = 0.5;
     bloomPass.radius = 1;
     bloomPass.threshold = 0.1;
     fgRef.current.postProcessingComposer().addPass(bloomPass);
+    refreshGraph()
   }, []);
 
-  function changeColor(node,newColor){
-      var oldColor = node.color
-      
-
+  function initialize(jsonObject) {
+    return [jsonObject.nodes, jsonObject.links]
   }
 
-
-  function changeAttribute(node,attribute,value){
-    
-  }
-    
-  function createNode(jsonObject){
+  function createNode(jsonObject) {
     var newIndex = jsonObject.nodes.length
-      var newId = newIndex.toString()
-
-      var newColor = colorMap.highlighted
-      console.log(newColor)
-
-      var newName = "New Node"
-      var newLabel = newId + ": " + newName
-
-    
-      var newNode = {}
-      newNode.color = newColor
-
-
-      newNode.id = newId
-      newNode.index = newIndex
-      newNode.name = newName
-      newNode.label = newLabel
-      newNode.val = 4
+    var newId = newIndex.toString()
+    var newColor = colorMap.highlighted
+    console.log(newColor)
+    var newName = "New Node"
+    var newLabel = newId + ": " + newName
+    var newNode = {}
+    newNode.color = newColor
+    newNode.id = newId
+    newNode.index = newIndex
+    newNode.name = newName
+    newNode.label = newLabel
+    newNode.val = 4
     return newNode
   }
 
-function resetNodeColor(){
-  
-}
-
-function queueNode(node){
-      var newQueue = currentNodeQueue.add(node.index)
-      setNodeQueue(newQueue)
-
-}
-
-function dequeueNodes(){
-  for (const element of currentNodeQueue.values()){
-      var node = jsonObject.nodes[element]
-      node.color = colorMap.default
-      var newNodes = jsonObject.nodes
-      newNodes[element] = node
-      var newLinks = jsonObject.links
-      setJsonObject({ nodes: newNodes, links: newLinks })
+  function refreshGraph() {
+    console.log('refreshing')
+    const nodes = jsonObject.nodes
+    const links = jsonObject.links
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i].color = colorMap.default
+    }
+    setJsonObject({ nodes: nodes, links: links })
   }
-}
-
-function refreshGraph(){
-
-}
 
   const handleNewNode = useCallback((event) => {
-    if (currentKeyPress == 'n') {
+    var queueObject = currentNodeQueue
 
+    if (currentKeyPress == 'n') {
+      //this portion handles bookkeeping
+
+      console.log(queueObject['n'].length)
+      if (queueObject['n'].length > 0) {
+
+        var previousNode = queueObject['n'].shift()
+        previousNode.color = colorMap.default
+
+        var [newNodes, newLinks] = initialize(jsonObject)
+
+        newNodes[previousNode.index] = previousNode
+
+        console.log('previousNode: ')
+        console.log(previousNode)
+
+        setJsonObject({ nodes: newNodes, links: newLinks })
+        setNodeQueue(currentNodeQueue)
+      }
+
+      //this portion handles creation
       var newNode = createNode(jsonObject)
-      var newQueue = currentNodeQueue.add(newNode.index)
-      setNodeQueue(newQueue)
+
 
       var mousex = event.clientX
       var mousey = event.clientY
@@ -211,34 +261,86 @@ function refreshGraph(){
       newNode.y = coordinates.y
       newNode.z = coordinates.z
 
+      //how can I handle color updating
       var nodes = jsonObject.nodes
       var links = jsonObject.links
       var newNodes = [...nodes, newNode]
       var newLinks = links
 
+      queueObject['n'].push(newNode)
+
+      console.log(newLinks)
+
       setJsonObject({ nodes: newNodes, links: newLinks })
+      setNodeQueue(currentNodeQueue)
 
     }
   })
 
-  const handleNotes = useCallback(() => {
-    const node = currentNode
-    setText([])
-    if (node.notes) {
-      const notesArray = node.notes.map(notes => notes.content)
-      setText(notesArray)
-    }
-  })
-
-  function toggleLabels() {
-    if (currentToggle == true) {
-      setToggle(false)
-    } else {
-      setToggle(true)
+  const handleNotes = (node = currentNode) => {
+    //could I use a state in this function?
+    //setText([])
+    if (node !== null) {
+      if (node.notes) {
+        const notesArray = node.notes.map(notes => notes.content)
+        setText(notesArray)
+      }
     }
   }
 
+  //this ensures the text is updated... I hope
+  useEffect(() => {
+    setText([])
 
+  }, [currentNode])
+
+
+
+  function toggleLabels() {
+    if (currentLabelToggle == true) {
+      setLabelToggle(false)
+    } else {
+      setLabelToggle(true)
+    }
+  }
+
+  const handleTextareaChange = (event) => {
+    console.log(event.target.value)
+    console.log(event.target.id)
+    var id = event.target.id
+    var text = event.target.value
+    var node = currentNode
+    node.notes[id].content = text
+
+  }
+
+  const handleButtonToggle = (event, isActive) => {
+    //this function recieves parameters from button object
+    //callback for buttons
+
+    console.log(event.target)
+    console.log('isactive: ')
+    console.log(isActive)
+    var buttonQueue = currentButtonToggles
+    buttonQueue[event.target.id] = isActive
+
+    for (const key in buttonQueue) {
+      if (buttonQueue.hasOwnProperty(key)) {
+        if (key !== event.target.id && buttonQueue[key] === true) {
+          buttonQueue[key] = false;
+        }
+
+      }
+    }
+    setContentToggle(buttonQueue[event.target.id])
+    console.log('buttonQueue')
+    console.log(buttonQueue)
+    setButtonToggles(buttonQueue)
+
+
+  }
+
+  //files
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     const reader = new FileReader();
@@ -250,75 +352,82 @@ function refreshGraph(){
 
       setJsonObject(jsonData)
 
-
     };
-
-    
-  
-
     reader.readAsText(file);
+
   };
 
   function handleDownload(data) {
-      const jsonData = JSON.stringify(data);
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'data.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    };
-
+    const jsonData = JSON.stringify(data);
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
   //component
 
   return (
     <div className="root">
 
       <div className="maincontainer">
+
         <input type="file" accept='.json' onChange={handleFileUpload} />
-        
-        <button onClick={()=> handleDownload(jsonObject)}>Save File
-          </button>
+
+        <button onClick={() => handleDownload(jsonObject)}>Save File
+        </button>
+
         <div className='datacontainer'>
 
           <div >
+
             <label for="myCheckbox" className='myCheckbox'>Hide labels?</label>
+
             <input type="checkbox" id="myCheckbox" name="myCheckbox" onChange={toggleLabels} />
+
           </div>
+
           <Overlay nodeName={currentNodeName} />
-          <ButtonContainer buttonArray={currentButtons} buttonFunction={handleNotes} />
-          <Scrollbox textEntries={currentText} />
+
+          <ButtonContainer buttonArray={currentButtons} buttonFunction={handleNotes} buttonHandler={handleButtonToggle} isActive={currentButtonToggles} />
+
+          <Scrollbox textEntries={currentText} editHandler={handleTextareaChange} toggler={currentContentToggle} />
+
         </div>
+
         <div className='graphicscontainer' tabIndex={1} onKeyUp={testUp}>
+
           <ForceGraph3D extraRenderers={css2renderGuy} ref={fgRef} graphData={jsonObject}
 
             onNodeRightClick={handleRightClick}
             onNodeClick={handleClick}
             onBackgroundClick={handleNewNode}
 
+
+            numDimensions={3}
+
             nodeThreeObject={node => {
               const nodeEl = document.createElement('div');
               nodeEl.textContent = node.label;
               nodeEl.style.color = '#e5e5e5';
               nodeEl.style.size = 8;
-              { currentToggle ? nodeEl.style.opacity = .65 : nodeEl.style.opacity = 0 }
+              { currentLabelToggle ? nodeEl.style.opacity = .65 : nodeEl.style.opacity = 0 }
               nodeEl.className = 'node-label';
-              
+
               return new CSS2DObject(nodeEl);
             }}
+
             nodeThreeObjectExtend={true}
-            
+
             backgroundColor='#000000'
             linkDirectionalArrowLength={4}
             linkDirectionalArrowRelPos={1}
 
             nodeResolution={32}
-
-            
-
           />
 
         </div>
