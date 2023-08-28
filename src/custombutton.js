@@ -6,8 +6,7 @@ const CustomButton = ({ buttonName, buttonFunction, buttonHandler, isActive }) =
        /*  const [isActive, setIsActive] = useState(true) */
     
         const toggler = () => {
-            console.log('closer to home (button)')
-            console.log(isActive)
+            
            /*  setIsActive(prevState => !prevState) */
             isActive = !isActive
             return isActive

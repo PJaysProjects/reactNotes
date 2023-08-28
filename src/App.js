@@ -33,7 +33,8 @@ const test3dNode = {
       "id": "id2",
       "name": "name2",
       "val": 10,
-      'notes': [{ content: "hello there" }]
+      'notes': [{ content: "hello there" }],
+      'links':[]
     }
   ],
   "links": [
@@ -62,6 +63,14 @@ const App = () => {
 
   }
 
+
+  const defaultButtons = ['notes','links']
+  const hiddenButtons = []
+
+  
+
+ 
+  const [currentAppState, setAppState] = useState(false)
   const [jsonObject, setJsonObject] = useState(test3dNode)
   const [currentNode, setNode] = useState(null)
   const [currentButtons, setButtons] = useState([])
@@ -92,7 +101,7 @@ const App = () => {
   useKeypress(allowedKeys, (event) => {
     if (currentKeyPress != event.key) {
       setKeypress(event.key)
-      console.log(event.key)
+      /* console.log(event.key) */
     }
   });
 
@@ -121,10 +130,14 @@ const App = () => {
 
   })
 
+  
+
   //--Inspect Node. Get Buttons/attributes. Show name in input field
-  const handleClick = useCallback(node => {
-    console.log("keypress")
-    console.log(currentKeyPress)
+
+  //when I use the "useCallback" hook, it makes me have to click twice
+  const handleClick = (node) => {
+    /* console.log("keypress")
+    console.log(currentKeyPress) */
     var queueObject = currentNodeQueue
 
     if (currentKeyPress === null) {
@@ -132,11 +145,19 @@ const App = () => {
       setButtons(Object.keys(node))
       setNode(node)
       setNodeName(node.name)
+      //oddly, if I just call the handle notes function, which has identical calls, it takes three clicks. This way takes two clicks
       if (node !== null) {
+        
+        //current pressed button has to be determined here and a mapping must be made
         if (node.notes) {
           const notesArray = node.notes.map(notes => notes.content)
+          
           setText(notesArray)
+          //always seems to carry the previous value
+          console.log(currentText)
         }
+
+
       }
     }
 
@@ -180,20 +201,25 @@ const App = () => {
 
 
     }
-  })
-
+  }
+  
   //pretty stuff
   useEffect(() => {
-    console.log("hi there")
-    console.dir(<ForceGraph3D />)
+    /* console.log("hi there")
+    console.dir(<ForceGraph3D />) */
     //console.log(document.getElementsByClassName('node-label'))
+    if (!currentAppState){
     const bloomPass = new UnrealBloomPass();
     bloomPass.strength = 0.5;
     bloomPass.radius = 1;
     bloomPass.threshold = 0.1;
     fgRef.current.postProcessingComposer().addPass(bloomPass);
+    setAppState(true)
+
+    }
     refreshGraph()
   }, []);
+
 
   function initialize(jsonObject) {
     return [jsonObject.nodes, jsonObject.links]
@@ -203,7 +229,7 @@ const App = () => {
     var newIndex = jsonObject.nodes.length
     var newId = newIndex.toString()
     var newColor = colorMap.highlighted
-    console.log(newColor)
+    /* console.log(newColor) */
     var newName = "New Node"
     var newLabel = newId + ": " + newName
     var newNode = {}
@@ -217,7 +243,7 @@ const App = () => {
   }
 
   function refreshGraph() {
-    console.log('refreshing')
+    /* console.log('refreshing') */
     const nodes = jsonObject.nodes
     const links = jsonObject.links
     for (let i = 0; i < nodes.length; i++) {
@@ -226,7 +252,7 @@ const App = () => {
     setJsonObject({ nodes: nodes, links: links })
   }
 
-  const handleNewNode = useCallback((event) => {
+  const handleNewNode = (event) => {
     var queueObject = currentNodeQueue
 
     if (currentKeyPress == 'n') {
@@ -242,8 +268,8 @@ const App = () => {
 
         newNodes[previousNode.index] = previousNode
 
-        console.log('previousNode: ')
-        console.log(previousNode)
+        /* console.log('previousNode: ')
+        console.log(previousNode) */
 
         setJsonObject({ nodes: newNodes, links: newLinks })
         setNodeQueue(currentNodeQueue)
@@ -269,33 +295,34 @@ const App = () => {
 
       queueObject['n'].push(newNode)
 
-      console.log(newLinks)
+      /* console.log(newLinks) */
 
       setJsonObject({ nodes: newNodes, links: newLinks })
       setNodeQueue(currentNodeQueue)
 
     }
-  })
+  }
 
   const handleNotes = (node = currentNode) => {
     //could I use a state in this function?
     //setText([])
     if (node !== null) {
       if (node.notes) {
+        
         const notesArray = node.notes.map(notes => notes.content)
         setText(notesArray)
       }
     }
   }
 
-  //this ensures the text is updated... I hope
-  useEffect(() => {
+  //this makes me have to double click on a new node, but it ensures that the previous notes are cleared. Searching for a better method
+ /*  useEffect(() => {
     setText([])
 
-  }, [currentNode])
+  }, [currentNode]) */
 
 
-
+  //this works with the hide labels checkbox
   function toggleLabels() {
     if (currentLabelToggle == true) {
       setLabelToggle(false)
@@ -303,6 +330,8 @@ const App = () => {
       setLabelToggle(true)
     }
   }
+
+
 
   const handleTextareaChange = (event) => {
     console.log(event.target.value)
@@ -314,13 +343,14 @@ const App = () => {
 
   }
 
+  //this untoggles buttons when another button is clicked
   const handleButtonToggle = (event, isActive) => {
     //this function recieves parameters from button object
     //callback for buttons
 
-    console.log(event.target)
+    /* console.log(event.target)
     console.log('isactive: ')
-    console.log(isActive)
+    console.log(isActive) */
     var buttonQueue = currentButtonToggles
     buttonQueue[event.target.id] = isActive
 
@@ -333,8 +363,8 @@ const App = () => {
       }
     }
     setContentToggle(buttonQueue[event.target.id])
-    console.log('buttonQueue')
-    console.log(buttonQueue)
+    /* console.log('buttonQueue')
+    console.log(buttonQueue) */
     setButtonToggles(buttonQueue)
 
 
@@ -369,6 +399,12 @@ const App = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  //button functions
+  const buttonFunctionsObject = {
+    'notes': handleNotes,
+    'links': null
+  }
   //component
 
   return (
@@ -394,6 +430,10 @@ const App = () => {
           <Overlay nodeName={currentNodeName} />
 
           <ButtonContainer buttonArray={currentButtons} buttonFunction={handleNotes} buttonHandler={handleButtonToggle} isActive={currentButtonToggles} />
+
+          {/* <div>
+            <button >Save changes</button>
+          </div> */}
 
           <Scrollbox textEntries={currentText} editHandler={handleTextareaChange} toggler={currentContentToggle} />
 
