@@ -2,8 +2,12 @@ import TextBox from "./text";
 import './text.css'
 
 const Scrollbox = ({textEntries,editHandler,toggler}) => {
+    console.log(textEntries)
+    console.log('step 3')
     
-    var data = textEntries.map((text,index) => <TextBox text={text} key={index} id={index} handler={editHandler}/>)
+    const data = textEntries.map((text,index) => <TextBox text={text} key={text} id={index} handler={editHandler}/>)
+
+    
     
     return (
         <div className="scrollbox">

@@ -34,7 +34,7 @@ const test3dNode = {
       "name": "name2",
       "val": 10,
       'notes': [{ content: "hello there" }],
-      'links':[]
+      'links': []
     }
   ],
   "links": [
@@ -64,12 +64,12 @@ const App = () => {
   }
 
 
-  const defaultButtons = ['notes','links']
+  const defaultButtons = ['notes', 'links']
   const hiddenButtons = []
 
-  
 
- 
+
+
   const [currentAppState, setAppState] = useState(false)
   const [jsonObject, setJsonObject] = useState(test3dNode)
   const [currentNode, setNode] = useState(null)
@@ -130,15 +130,17 @@ const App = () => {
 
   })
 
-  
+
 
   //--Inspect Node. Get Buttons/attributes. Show name in input field
 
   //when I use the "useCallback" hook, it makes me have to click twice
-  const handleClick = (node) => {
+  const handleLeftClick = (node) => {
     /* console.log("keypress")
     console.log(currentKeyPress) */
     var queueObject = currentNodeQueue
+
+    console.log('step 1')
 
     if (currentKeyPress === null) {
 
@@ -147,11 +149,12 @@ const App = () => {
       setNodeName(node.name)
       //oddly, if I just call the handle notes function, which has identical calls, it takes three clicks. This way takes two clicks
       if (node !== null) {
-        
+
         //current pressed button has to be determined here and a mapping must be made
         if (node.notes) {
           const notesArray = node.notes.map(notes => notes.content)
-          
+          console.log('step 2')
+
           setText(notesArray)
           //always seems to carry the previous value
           console.log(currentText)
@@ -202,19 +205,19 @@ const App = () => {
 
     }
   }
-  
+
   //pretty stuff
   useEffect(() => {
     /* console.log("hi there")
     console.dir(<ForceGraph3D />) */
     //console.log(document.getElementsByClassName('node-label'))
-    if (!currentAppState){
-    const bloomPass = new UnrealBloomPass();
-    bloomPass.strength = 0.5;
-    bloomPass.radius = 1;
-    bloomPass.threshold = 0.1;
-    fgRef.current.postProcessingComposer().addPass(bloomPass);
-    setAppState(true)
+    if (!currentAppState) {
+      const bloomPass = new UnrealBloomPass();
+      bloomPass.strength = 0.5;
+      bloomPass.radius = 1;
+      bloomPass.threshold = 0.1;
+      fgRef.current.postProcessingComposer().addPass(bloomPass);
+      setAppState(true)
 
     }
     refreshGraph()
@@ -308,7 +311,7 @@ const App = () => {
     //setText([])
     if (node !== null) {
       if (node.notes) {
-        
+
         const notesArray = node.notes.map(notes => notes.content)
         setText(notesArray)
       }
@@ -316,10 +319,10 @@ const App = () => {
   }
 
   //this makes me have to double click on a new node, but it ensures that the previous notes are cleared. Searching for a better method
- /*  useEffect(() => {
-    setText([])
-
-  }, [currentNode]) */
+  /*  useEffect(() => {
+     setText([])
+ 
+   }, [currentNode]) */
 
 
   //this works with the hide labels checkbox
@@ -330,6 +333,7 @@ const App = () => {
       setLabelToggle(true)
     }
   }
+
 
 
 
@@ -374,20 +378,52 @@ const App = () => {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     const reader = new FileReader();
-
+    try {
     reader.onload = (e) => {
       const fileContent = e.target.result;
       const jsonData = JSON.parse(fileContent);
       // Use the jsonData as needed in your app
+      jsonData['edges'].forEach(element => {
+
+        element['source'] = element['from']
+        delete element['from']
+
+        element['target'] = element['to']
+        delete element['to']
+
+      });
+
+      jsonData['links'] = jsonData['edges']
+
+      jsonData['nodes'].forEach(element => {
+        element['val'] = 4
+      });
+
 
       setJsonObject(jsonData)
 
     };
     reader.readAsText(file);
+  } catch {
+    //I'm sure something more productive could go here, but I am merely trying to protect from cancelling a file upload
+  }
 
   };
 
   function handleDownload(data) {
+    
+    data['links'].forEach(element => {
+
+      element['from'] = element['source']
+      delete element['source']
+
+      element['to'] = element['target']
+      delete element['target']
+
+    });
+
+    data['edges'] = data['links']
+
     const jsonData = JSON.stringify(data);
     const blob = new Blob([jsonData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -405,6 +441,18 @@ const App = () => {
     'notes': handleNotes,
     'links': null
   }
+
+  //custom functions
+
+  const calculateZIndex = (node) =>{
+    console.log(node)
+    for (let i=0; i<jsonObject.links.length; i++){
+      if(jsonObject.links[i]['source'] === node.id){
+        
+      }
+    }
+  }
+
   //component
 
   return (
@@ -444,7 +492,7 @@ const App = () => {
           <ForceGraph3D extraRenderers={css2renderGuy} ref={fgRef} graphData={jsonObject}
 
             onNodeRightClick={handleRightClick}
-            onNodeClick={handleClick}
+            onNodeClick={handleLeftClick}
             onBackgroundClick={handleNewNode}
 
 
@@ -457,7 +505,7 @@ const App = () => {
               nodeEl.style.size = 8;
               { currentLabelToggle ? nodeEl.style.opacity = .65 : nodeEl.style.opacity = 0 }
               nodeEl.className = 'node-label';
-
+              calculateZIndex(node)
               return new CSS2DObject(nodeEl);
             }}
 
