@@ -47,6 +47,11 @@
   z-index: 2;
 }
 
+/* .sidebyside {
+  display: flex;
+  flex-direction: column;
+} */
+
 textarea {
   resize: none;
 }
@@ -87,11 +92,13 @@ button {
   opacity: 90%;
   z-index: 0;
 }
+
 .searchbar {
   background-color: #000000;
   color: #E5E5E5;
   width: 99%;
 }
+
 .currentnode {
   background-color: #000000;
   color: #E5E5E5;

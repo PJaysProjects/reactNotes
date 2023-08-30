@@ -24,14 +24,16 @@ import './buttoncontainer.css'
 const test3dNode = {
   "nodes": [
     {
-      "id": "id1",
+      "id": "1",
       "name": "name1",
+      'label': "1" + ": " + "name1",
       "val": 1,
       'notes': [{ content: 'whoa....' }, { content: 'what do we have here?' }, { content: "hopefully \n something \n cool" }]
     },
     {
-      "id": "id2",
+      "id": "2",
       "name": "name2",
+      'label': "2" + ": " + "name2",
       "val": 10,
       'notes': [{ content: "hello there" }],
       'links': []
@@ -39,8 +41,8 @@ const test3dNode = {
   ],
   "links": [
     {
-      "source": "id1",
-      "target": "id2"
+      "source": "1",
+      "target": "2"
     }
   ]
 }
@@ -81,6 +83,7 @@ const App = () => {
   const [currentContentToggle, setContentToggle] = useState(false)
   const [currentNodeQueue, setNodeQueue] = useState(queueObject)
   const [currentButtonToggles, setButtonToggles] = useState(buttonToggleObject)
+  const [currentFoundList, setFoundList] = useState({})
 
 
   const colorMap = {
@@ -106,6 +109,8 @@ const App = () => {
   });
 
   //clicks
+
+  //this persists between renders, and is defined in the Force3D component
   const fgRef = useRef()
 
   //--Focus Node
@@ -140,28 +145,23 @@ const App = () => {
     console.log(currentKeyPress) */
     var queueObject = currentNodeQueue
 
-    console.log('step 1')
+    
 
     if (currentKeyPress === null) {
 
-      setButtons(Object.keys(node))
+      var currentKeys = Object.keys(node)
+      if(currentKeys.includes('notes')){
+        var index = currentKeys.indexOf('notes')
+        currentKeys.unshift(currentKeys.splice(index,1)[0])
+      }
+      
+      
+      
+      setButtons(currentKeys)
       setNode(node)
       setNodeName(node.name)
       //oddly, if I just call the handle notes function, which has identical calls, it takes three clicks. This way takes two clicks
-      if (node !== null) {
-
-        //current pressed button has to be determined here and a mapping must be made
-        if (node.notes) {
-          const notesArray = node.notes.map(notes => notes.content)
-          console.log('step 2')
-
-          setText(notesArray)
-          //always seems to carry the previous value
-          console.log(currentText)
-        }
-
-
-      }
+      handleNotes(node)
     }
 
     if (currentKeyPress === 'c') {
@@ -220,6 +220,7 @@ const App = () => {
       setAppState(true)
 
     }
+    //console.log(fgRef.current)
     refreshGraph()
   }, []);
 
@@ -234,6 +235,8 @@ const App = () => {
     var newColor = colorMap.highlighted
     /* console.log(newColor) */
     var newName = "New Node"
+
+    //need this to be automatic somehow... i.e., if id or name change, the label will change
     var newLabel = newId + ": " + newName
     var newNode = {}
     newNode.color = newColor
@@ -242,6 +245,8 @@ const App = () => {
     newNode.name = newName
     newNode.label = newLabel
     newNode.val = 4
+    newNode.shape = 'dot'
+    newNode.notes = []
     return newNode
   }
 
@@ -318,6 +323,29 @@ const App = () => {
     }
   }
 
+  const addHandler = (text)=> {
+    var node = currentNode
+    
+    for (var key in currentButtonToggles) {
+      if (currentButtonToggles.hasOwnProperty(key)) {
+          if (!currentButtonToggles.key){
+            
+            node.notes.push({content: text,timestamp: 'now'})
+            console.log(node.notes)
+            /* console.log(node)
+            const [nodes, links] = initialize(jsonObject)
+            nodes[node.index] = node
+            setJsonObject({ nodes: nodes, links: links }) */
+            const notesArray = node.notes.map(notes => notes.content)
+          
+
+          setText(notesArray)
+            
+          }
+      }
+  }
+  }
+
   //this makes me have to double click on a new node, but it ensures that the previous notes are cleared. Searching for a better method
   /*  useEffect(() => {
      setText([])
@@ -333,9 +361,6 @@ const App = () => {
       setLabelToggle(true)
     }
   }
-
-
-
 
   const handleTextareaChange = (event) => {
     console.log(event.target.value)
@@ -379,50 +404,54 @@ const App = () => {
     const file = event.target.files[0];
     const reader = new FileReader();
     try {
-    reader.onload = (e) => {
-      const fileContent = e.target.result;
-      const jsonData = JSON.parse(fileContent);
-      // Use the jsonData as needed in your app
-      jsonData['edges'].forEach(element => {
+      reader.onload = (e) => {
+        const fileContent = e.target.result;
+        const jsonData = JSON.parse(fileContent);
+        // Use the jsonData as needed in your app
+        jsonData['edges'].forEach(element => {
 
-        element['source'] = element['from']
-        delete element['from']
+          element['source'] = element['from']
+          delete element['from']
 
-        element['target'] = element['to']
-        delete element['to']
+          element['target'] = element['to']
+          delete element['to']
 
-      });
+        });
 
-      jsonData['links'] = jsonData['edges']
+        jsonData['links'] = jsonData['edges']
 
-      jsonData['nodes'].forEach(element => {
-        element['val'] = 4
-      });
+        jsonData['nodes'].forEach(element => {
+          element['val'] = 4
+        });
 
 
-      setJsonObject(jsonData)
+        setJsonObject(jsonData)
 
-    };
-    reader.readAsText(file);
-  } catch {
-    //I'm sure something more productive could go here, but I am merely trying to protect from cancelling a file upload
-  }
+      };
+      reader.readAsText(file);
+    } catch {
+      //I'm sure something more productive could go here, but I am merely trying to protect from cancelling a file upload
+    }
 
   };
 
+  //this is really fucked up for some reason
   function handleDownload(data) {
-    
-    data['links'].forEach(element => {
-
-      element['from'] = element['source']
-      delete element['source']
-
-      element['to'] = element['target']
-      delete element['target']
+    data['edges'] = data['links']
+    data['edges'].forEach((element,index) => {
+      
+      data['edges'][index] = {
+        'from': element['source'].id,
+        'to': element['target'].id,
+        'arrows': element['arrows'],
+        'id': element['id']
+      }
+      
+      
 
     });
 
-    data['edges'] = data['links']
+    
 
     const jsonData = JSON.stringify(data);
     const blob = new Blob([jsonData], { type: 'application/json' });
@@ -444,11 +473,49 @@ const App = () => {
 
   //custom functions
 
-  const calculateZIndex = (node) =>{
-    console.log(node)
-    for (let i=0; i<jsonObject.links.length; i++){
-      if(jsonObject.links[i]['source'] === node.id){
+  //string matcher
+  const findAndSetColor = (searchString) => {
+    var foundNodes = currentFoundList
+    for (const node of jsonObject.nodes) {
+      node.color = colorMap.default
+      node.val = 4
+      
+      foundNodes[node.id] = false
+    }
+
+    const filteredNodes = jsonObject.nodes.filter(node => node.label.toLowerCase().includes(searchString.toLowerCase()))
+    if (searchString.length > 0) {
+      for (const node of filteredNodes) {
+        node.color = colorMap.highlighted
+        node.val = 64
         
+        foundNodes[node.id] = true
+      }
+
+    }
+
+    //this is to trigger a re-render
+    const [nodes, links] = initialize(jsonObject)
+    setJsonObject({ nodes: nodes, links: links })
+    setFoundList(foundNodes)
+    console.log('search complete')
+    console.log(currentFoundList)
+  }
+
+  //tree searcher for connectivity dependent properties
+  const zIndexObject = {
+
+  }
+
+  const calculateZIndex = (node) => {
+    console.log(jsonObject.links)
+
+    var queue = new Set()
+
+    //finding children
+    for (let i = 0; i < jsonObject.links.length; i++) {
+      if (jsonObject.links[i]['source'] === node.id) {
+        var nextNodeId = jsonObject.links[i]['target']
       }
     }
   }
@@ -475,7 +542,7 @@ const App = () => {
 
           </div>
 
-          <Overlay nodeName={currentNodeName} />
+          <Overlay nodeName={currentNodeName} searchFunction={findAndSetColor} />
 
           <ButtonContainer buttonArray={currentButtons} buttonFunction={handleNotes} buttonHandler={handleButtonToggle} isActive={currentButtonToggles} />
 
@@ -483,7 +550,7 @@ const App = () => {
             <button >Save changes</button>
           </div> */}
 
-          <Scrollbox textEntries={currentText} editHandler={handleTextareaChange} toggler={currentContentToggle} />
+          <Scrollbox textEntries={currentText} editHandler={handleTextareaChange} addHandler={addHandler} toggler={currentContentToggle} />
 
         </div>
 
@@ -502,10 +569,18 @@ const App = () => {
               const nodeEl = document.createElement('div');
               nodeEl.textContent = node.label;
               nodeEl.style.color = '#e5e5e5';
-              nodeEl.style.size = 8;
+              nodeEl.style.size = 30;
               { currentLabelToggle ? nodeEl.style.opacity = .65 : nodeEl.style.opacity = 0 }
+              
+              {currentFoundList[node.id] ? nodeEl.style.fontSize = '30px' : nodeEl.style.fontSize = '11px'}
+              //console.log('triggered')
               nodeEl.className = 'node-label';
-              calculateZIndex(node)
+              nodeEl.id = node.id
+              /* if (Math.random() > 0.5){
+                nodeEl.style.color = '#FFF000';
+                nodeEl.style.zIndex = 8
+              } */
+              //calculateZIndex(node)
               return new CSS2DObject(nodeEl);
             }}
 

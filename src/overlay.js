@@ -1,12 +1,17 @@
 
-function Overlay({nodeName}) {
+function Overlay({nodeName,searchFunction}) {
 
 
     return(
         <div className='overlay'>
-        <input className="searchbar">
+            <div className="sidebyside">
+        <input type='text' placeholder='search here...' className="searchbar" onKeyUp={(event)=>{
+            searchFunction(event.target.value)
+        }}>
         </input>
-        <input type='text' className="currentnode" value={nodeName}>
+        {/* <button className="custombutton">Clear</button> */}
+        </div>
+        <input type='text' className="currentnode" value={nodeName} placeholder="selected node name...">
             
         </input>
         </div>
