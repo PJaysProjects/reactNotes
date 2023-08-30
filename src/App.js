@@ -24,16 +24,18 @@ import './buttoncontainer.css'
 const test3dNode = {
   "nodes": [
     {
-      "id": "1",
+      "id": "0",
       "name": "name1",
-      'label': "1" + ": " + "name1",
+      'label': "0" + ": " + "name1",
+      'index': 0,
       "val": 1,
       'notes': [{ content: 'whoa....' }, { content: 'what do we have here?' }, { content: "hopefully \n something \n cool" }]
     },
     {
-      "id": "2",
+      "id": "1",
       "name": "name2",
-      'label': "2" + ": " + "name2",
+      'label': "1" + ": " + "name2",
+      'index': 1,
       "val": 10,
       'notes': [{ content: "hello there" }],
       'links': []
@@ -41,8 +43,8 @@ const test3dNode = {
   ],
   "links": [
     {
-      "source": "1",
-      "target": "2"
+      "source": "0",
+      "target": "1"
     }
   ]
 }
@@ -86,13 +88,28 @@ const App = () => {
   const [currentFoundList, setFoundList] = useState({})
 
 
-  const colorMap = {
-    default: '#e5e5e5',
-    highlighted: '#00E5E5',
-    connecting: '#00E553',
-    sunny: '#FFEBB0',
-    pale: '#e5e5e5'
+
+
+  const colorTable = {
+    space: {
+      default: '#E5E5E5',
+      highlighted: '#00E5E5',
+      connecting: '#00E553',
+      background: '#000000',
+      sunny: '#FFEBB0',
+      pale: '#e5e5e5'
+    },
+    sunset: {
+      default: '#E6A29E',
+      highlighted: '#61447C',
+      connecting: '#F9F0DF',
+      background: '#000000',
+      sunny: '#FFEBB0',
+      pale: '#e5e5e5'
+    }
   }
+
+  const colorMap = colorTable.space
 
   //keys
   const allowedKeys = ['n', 'c']
@@ -586,7 +603,7 @@ const App = () => {
 
             nodeThreeObjectExtend={true}
 
-            backgroundColor='#000000'
+            backgroundColor={colorMap.background}
             linkDirectionalArrowLength={4}
             linkDirectionalArrowRelPos={1}
 
