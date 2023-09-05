@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .draggable {
+            width: 100px;
+            height: 100px;
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            line-height: 100px;
+            cursor: grab;
+        }
+    </style>
+    <script>
+        let draggedElement = null;
+
+        function dragStart(event) {
+            draggedElement = event.target;
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function drop(event) {
+            event.preventDefault();
+
+            if (draggedElement && draggedElement !== event.target) {
+                // Swap the innerHTML of the two elements
+                const temp = draggedElement.innerHTML;
+                draggedElement.innerHTML = event.target.innerHTML;
+                event.target.innerHTML = temp;
+
+                // Reset the draggedElement
+                draggedElement = null;
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- Make these elements draggable and drop targets -->
+    <div class="draggable" draggable="true" ondragstart="dragStart(event)" ondragover="allowDrop(event)" ondrop="drop(event)">Element 1</div>
+    <div class="draggable" draggable="true" ondragstart="dragStart(event)" ondragover="allowDrop(event)" ondrop="drop(event)">Element 2</div>
+</body>
+</html>

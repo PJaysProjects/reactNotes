@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .draggable {
+            width: 100px;
+            height: 100px;
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            line-height: 100px;
+            cursor: grab;
+        }
+    </style>
+    <script>
+        function dragStart(event) {
+            event.dataTransfer.setData("text/html", event.target.outerHTML);
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const sourceElementHTML = event.dataTransfer.getData("text/html");
+            event.target.outerHTML = sourceElementHTML;
+        }
+    </script>
+</head>
+<body>
+    <div id="element1" class="draggable" draggable="true" ondragstart="dragStart(event)">Element 1</div>
+    <div id="element2" class="draggable" draggable="true" ondragstart="dragStart(event)">Element 2</div>
+    
+    <div id="dropTarget" class="draggable" ondragover="allowDrop(event)" ondrop="drop(event)">Drop here</div>
+</body>
+</html>

@@ -2,6 +2,7 @@
 import Scrollbox from './scrollbox';
 import ButtonContainer from './buttonContainer';
 import Overlay from './overlay';
+import BoundingRectangle from './boundingbox';
 
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
@@ -13,13 +14,8 @@ import * as THREE from 'three';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import './text.css'
 import './App.css';
-
-import './scrollbox.css'
 import './datacontainer.css'
-import './buttoncontainer.css'
-
 
 const test3dNode = {
   "nodes": [
@@ -87,9 +83,11 @@ const App = () => {
   const [currentButtonToggles, setButtonToggles] = useState(buttonToggleObject)
   const [currentFoundList, setFoundList] = useState({})
 
+  const [currentCanvasState, setCanvasState] = useState(true)
 
 
 
+  //background colors are made way too bright by bloompass atm
   const colorTable = {
     space: {
       default: '#E5E5E5',
@@ -103,7 +101,7 @@ const App = () => {
       default: '#E6A29E',
       highlighted: '#61447C',
       connecting: '#F9F0DF',
-      background: '#000000',
+      background: '#f8bc5b',
       sunny: '#FFEBB0',
       pale: '#e5e5e5'
     }
@@ -162,18 +160,18 @@ const App = () => {
     console.log(currentKeyPress) */
     var queueObject = currentNodeQueue
 
-    
+
 
     if (currentKeyPress === null) {
 
       var currentKeys = Object.keys(node)
-      if(currentKeys.includes('notes')){
+      if (currentKeys.includes('notes')) {
         var index = currentKeys.indexOf('notes')
-        currentKeys.unshift(currentKeys.splice(index,1)[0])
+        currentKeys.unshift(currentKeys.splice(index, 1)[0])
       }
-      
-      
-      
+
+
+
       setButtons(currentKeys)
       setNode(node)
       setNodeName(node.name)
@@ -233,7 +231,10 @@ const App = () => {
       bloomPass.strength = 0.5;
       bloomPass.radius = 1;
       bloomPass.threshold = 0.1;
+
+      //check out fgRef.curret.renderer
       fgRef.current.postProcessingComposer().addPass(bloomPass);
+      console.dir(fgRef.current.postProcessingComposer())
       setAppState(true)
 
     }
@@ -245,6 +246,10 @@ const App = () => {
   function initialize(jsonObject) {
     return [jsonObject.nodes, jsonObject.links]
   }
+
+
+
+  
 
   function createNode(jsonObject) {
     var newIndex = jsonObject.nodes.length
@@ -340,27 +345,27 @@ const App = () => {
     }
   }
 
-  const addHandler = (text)=> {
+  const addHandler = (text) => {
     var node = currentNode
-    
+
     for (var key in currentButtonToggles) {
       if (currentButtonToggles.hasOwnProperty(key)) {
-          if (!currentButtonToggles.key){
-            
-            node.notes.push({content: text,timestamp: 'now'})
-            console.log(node.notes)
-            /* console.log(node)
-            const [nodes, links] = initialize(jsonObject)
-            nodes[node.index] = node
-            setJsonObject({ nodes: nodes, links: links }) */
-            const notesArray = node.notes.map(notes => notes.content)
-          
+        if (!currentButtonToggles.key) {
+
+          node.notes.push({ content: text, timestamp: 'now' })
+          //console.log(node.notes)
+          /* console.log(node)
+          const [nodes, links] = initialize(jsonObject)
+          nodes[node.index] = node
+          setJsonObject({ nodes: nodes, links: links }) */
+          const notesArray = node.notes.map(notes => notes.content)
+
 
           setText(notesArray)
-            
-          }
+
+        }
       }
-  }
+    }
   }
 
   //this makes me have to double click on a new node, but it ensures that the previous notes are cleared. Searching for a better method
@@ -380,6 +385,7 @@ const App = () => {
   }
 
   const handleTextareaChange = (event) => {
+    console.log('changing')
     console.log(event.target.value)
     console.log(event.target.id)
     var id = event.target.id
@@ -455,20 +461,20 @@ const App = () => {
   //this is really fucked up for some reason
   function handleDownload(data) {
     data['edges'] = data['links']
-    data['edges'].forEach((element,index) => {
-      
+    data['edges'].forEach((element, index) => {
+
       data['edges'][index] = {
         'from': element['source'].id,
         'to': element['target'].id,
         'arrows': element['arrows'],
         'id': element['id']
       }
-      
-      
+
+
 
     });
 
-    
+
 
     const jsonData = JSON.stringify(data);
     const blob = new Blob([jsonData], { type: 'application/json' });
@@ -496,7 +502,7 @@ const App = () => {
     for (const node of jsonObject.nodes) {
       node.color = colorMap.default
       node.val = 4
-      
+
       foundNodes[node.id] = false
     }
 
@@ -505,7 +511,7 @@ const App = () => {
       for (const node of filteredNodes) {
         node.color = colorMap.highlighted
         node.val = 64
-        
+
         foundNodes[node.id] = true
       }
 
@@ -573,6 +579,7 @@ const App = () => {
 
         <div className='graphicscontainer' tabIndex={1} onKeyUp={testUp}>
 
+
           <ForceGraph3D extraRenderers={css2renderGuy} ref={fgRef} graphData={jsonObject}
 
             onNodeRightClick={handleRightClick}
@@ -588,8 +595,8 @@ const App = () => {
               nodeEl.style.color = '#e5e5e5';
               nodeEl.style.size = 30;
               { currentLabelToggle ? nodeEl.style.opacity = .65 : nodeEl.style.opacity = 0 }
-              
-              {currentFoundList[node.id] ? nodeEl.style.fontSize = '30px' : nodeEl.style.fontSize = '11px'}
+
+              { currentFoundList[node.id] ? nodeEl.style.fontSize = '30px' : nodeEl.style.fontSize = '11px' }
               //console.log('triggered')
               nodeEl.className = 'node-label';
               nodeEl.id = node.id
@@ -613,7 +620,9 @@ const App = () => {
         </div>
 
       </div>
-
+      <div>
+        {currentCanvasState && <BoundingRectangle />}
+      </div>
     </div>
   );
 }

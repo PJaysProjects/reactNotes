@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* Define the style for the draggable element */
+        .draggable {
+            width: 100px;
+            height: 100px;
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            line-height: 100px;
+            cursor: grab; /* Change cursor to a hand */
+        }
+    </style>
+    <script>
+        // Function to handle the dragstart event
+        function dragStart(event) {
+            // Set the data to be transferred during the drag-and-drop operation
+            event.dataTransfer.setData("text/plain", event.target.id);
+        }
+
+        // Function to handle the dragover event and allow dropping
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        // Function to handle the drop event
+        function drop(event) {
+            event.preventDefault();
+            // Get the data that was set during the dragstart event
+            const data = event.dataTransfer.getData("text/plain");
+            // Append the dragged element to the drop target
+            const droppedElement = document.getElementById(data);
+            event.target.appendChild(droppedElement);
+        }
+    </script>
+</head>
+<body>
+    <!-- Make this element draggable -->
+    <div id="draggableElement" class="draggable" draggable="true" ondragstart="dragStart(event)">Drag me</div>
+    
+    <!-- Make this element a drop target -->
+    <div id="dropTarget" class="draggable" ondragover="allowDrop(event)" ondrop="drop(event)">Drop here</div>
+</body>
+</html>
