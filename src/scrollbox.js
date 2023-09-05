@@ -40,7 +40,9 @@ const Scrollbox = ({ textEntries, editHandler, toggler, addHandler }) => {
 
     const renderData = () => {
         //rerenders 4 times
-        const data = currentTextEntries.map((text, index) => <TextBox text={text} key={text} id={index} handler={editHandler} handleDrag={handleDrag} handleDrop={handleDrop} />)
+
+        //PERHAPS USE useRef TO REFERENCE THE SPECIFIC TEXTBOX
+        const data = currentTextEntries.map((text, index) => <TextBox text={text} key={text + index.toString()} id={index} handler={editHandler} handleDrag={handleDrag} handleDrop={handleDrop} />)
 
         data.push(<TextBox id={data.length + 1} handler={addHandler} key="newentry" isNew={true} />)
         

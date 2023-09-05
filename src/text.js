@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import './textNext.css'
 
 
@@ -8,7 +8,16 @@ const TextBox = ({ text, id, handler, isNew = false, handleDrag, handleDrop }) =
 
     const [currentDraggedElement, setDraggedElement] = useState(null)
 
+    const onCreationRef = useRef(null)
+    
+    useEffect(()=>{
+        
+        console.log(onCreationRef.current)
+        
+    },[text])
+
     function dragStart(event) {
+        console.log(event)
         handleDrag(event.target)
         
     }
@@ -34,8 +43,8 @@ const TextBox = ({ text, id, handler, isNew = false, handleDrag, handleDrop }) =
 
     const identifier = 'textbox' + id.toString()
 
-    return (<div className="notebox" key={text} draggable={!isNew} onDragStart={dragStart} onDragOver={allowDrop} onDrop={drop}>
-        <textarea defaultValue={currentText} className="newnote" id={id} style={{ height: '100px' }} onKeyUp={!isNew ? handler : null} placeholder='new entry..' onDrop={handler}/>
+    return (<div className="notebox" key={text +id.toString()} draggable={!isNew} onDragStart={dragStart} onDragOver={allowDrop} onDrop={drop}>
+        <textarea defaultValue={currentText} className="newnote" id={id} onKeyUp={!isNew ? handler : null} placeholder='new entry..' onDrop={handler} ref={onCreationRef}/>
         {
             isNew && <button className='newentrybutton' onClick={() => {
                 var newEntry = document.getElementById(id.toString())
