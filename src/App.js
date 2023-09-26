@@ -13,10 +13,12 @@ import useKeypress from 'react-use-keypress';
 import * as THREE from 'three';
 
 import { useCallback, useEffect, useRef, useState, useContext } from 'react';
+import { useCommonVariablesContext, TextProvider } from './commonVariables';
+
 
 import './App.css';
 import './datacontainer.css'
-import { createContext } from 'react';
+
 
 const test3dNode = {
   "nodes": [
@@ -50,6 +52,9 @@ const test3dNode = {
 
 
 const App = () => {
+
+
+
 
   const css2renderGuy = [new CSS2DRenderer()];
 
@@ -86,7 +91,7 @@ const App = () => {
 
   const [currentCanvasState, setCanvasState] = useState(true)
 
-  const [currentDim,setDim] = useState(3)
+  const [currentDim, setDim] = useState(3)
 
 
 
@@ -167,7 +172,7 @@ const App = () => {
     console.log(currentKeyPress) */
     var queueObject = currentNodeQueue
     //something is blocking my node from being clicked... I feel totally lost right now
-console.log(currentKeyPress)
+    console.log(currentKeyPress)
     console.log('definitely clicking')
     if (currentKeyPress === null) {
 
@@ -523,11 +528,11 @@ console.log(currentKeyPress)
     }
   };
 
-  const changeDimension = () =>{
-    if (currentDim == 3){
+  const changeDimension = () => {
+    if (currentDim == 3) {
       setDim(2)
     }
-    if (currentDim == 2){
+    if (currentDim == 2) {
       setDim(3)
     }
   }
@@ -600,7 +605,7 @@ console.log(currentKeyPress)
             <input type="checkbox" id="myCheckbox" name="myCheckbox" onChange={toggleLabels} />
 
           </div>
-          
+
           {/* I love this of course, but it messes up right click for some reason<div >
 
             <label for="myCheckbox2" className='myCheckbox2'>Flatten?</label>
@@ -616,9 +621,9 @@ console.log(currentKeyPress)
           {/* <div>
             <button >Save changes</button>
           </div> */}
-
-          <Scrollbox textEntries={currentText} editHandler={handleTextareaChange} addHandler={addHandler} toggler={currentContentToggle} dragUpdater={dragUpdater} />
-
+          <TextProvider value={currentText}>
+            <Scrollbox text={currentText} editHandler={handleTextareaChange} addHandler={addHandler} toggler={currentContentToggle} dragUpdater={dragUpdater} />
+          </TextProvider>
         </div>
 
         <div className='graphicscontainer' tabIndex={1} onKeyUp={setKeypressNull}>
@@ -673,4 +678,3 @@ console.log(currentKeyPress)
 
 export default App;
 
-export const currentTextContext = createContext(currentText)

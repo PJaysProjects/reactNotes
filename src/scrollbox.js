@@ -1,15 +1,20 @@
 import TextBox from "./textNew";
 import { useEffect, useState, useRef } from "react";
 import './scrollbox.css'
+import { useCommonVariablesContext, TextProvider } from "./commonVariables";
 
-const Scrollbox = ({ textEntries, editHandler, toggler, addHandler, dragUpdater}) => {
+const Scrollbox = ({ text,editHandler, toggler, addHandler, dragUpdater}) => {
+    const {currentText, updateText} = useCommonVariablesContext()
+    
     const [currentDragged, setDragged] = useState(null)
-    const [currentTextEntries, setTextEntries] = useState([])
+    
     
    
     useEffect(()=>{
-        setTextEntries(textEntries)
-    },[textEntries])
+        
+        updateText(text)
+        
+    },[text])
 
     
 
@@ -35,7 +40,7 @@ const Scrollbox = ({ textEntries, editHandler, toggler, addHandler, dragUpdater}
         //rerenders 4 times
 
         //PERHAPS USE useRef TO REFERENCE THE SPECIFIC TEXTBOX
-        const data = currentTextEntries.map((text, index) => <TextBox text={text} key={text + index.toString()} id={index} handler={editHandler} handleDrag={handleDrag} handleDrop={handleDrop}/>)
+        const data = currentText.map((text, index) => <TextBox text={text} key={text + index.toString()} id={index} handler={editHandler} handleDrag={handleDrag} handleDrop={handleDrop}/>)
 
         data.push(<TextBox id={data.length + 1} handler={addHandler} key="newentry" isNew={true} />)
         
@@ -43,9 +48,11 @@ const Scrollbox = ({ textEntries, editHandler, toggler, addHandler, dragUpdater}
     }
 
     return (
+        <TextProvider>
         <div className="scrollbox">
             {toggler ? renderData() : null}
         </div>
+        </TextProvider>
     )
 }
 
