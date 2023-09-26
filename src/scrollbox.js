@@ -1,14 +1,19 @@
-import TextBox from "./text";
-import { useEffect, useState } from "react";
+import TextBox from "./textNew";
+import { useEffect, useState, useRef } from "react";
 import './scrollbox.css'
 
-const Scrollbox = ({ textEntries, editHandler, toggler, addHandler }) => {
+const Scrollbox = ({ textEntries, editHandler, toggler, addHandler, dragUpdater}) => {
     const [currentDragged, setDragged] = useState(null)
     const [currentTextEntries, setTextEntries] = useState([])
+    
    
     useEffect(()=>{
         setTextEntries(textEntries)
     },[textEntries])
+
+    
+
+    
 
     const handleDrag = (object) => {
         setDragged(object)
@@ -16,33 +21,21 @@ const Scrollbox = ({ textEntries, editHandler, toggler, addHandler }) => {
     }
 
     const handleDrop = (object) => { 
+        const targetText = object.current.textContent
+        const draggedText = currentDragged.current.textContent
         
-        let target = object.target
-        if(target.tagName === 'TEXTAREA'){
-            target = target.parentNode
-        }
-        const targetText = target.children[0].defaultValue
-        const draggedText = currentDragged.children[0].defaultValue
+        currentDragged.current.textContent = targetText
+        object.current.textContent = draggedText
 
-        const targetId = target.children[0].id
-        const draggedId = currentDragged.children[0].id
-
-        var newTextEntries = currentTextEntries
-        console.log(newTextEntries)
-
-        newTextEntries[targetId] = draggedText
-        newTextEntries[draggedId] = targetText
-
-        setTextEntries(newTextEntries)
-        setDragged(null)
-        
+        dragUpdater(currentDragged)
+        dragUpdater(object)
     }
 
     const renderData = () => {
         //rerenders 4 times
 
         //PERHAPS USE useRef TO REFERENCE THE SPECIFIC TEXTBOX
-        const data = currentTextEntries.map((text, index) => <TextBox text={text} key={text + index.toString()} id={index} handler={editHandler} handleDrag={handleDrag} handleDrop={handleDrop} />)
+        const data = currentTextEntries.map((text, index) => <TextBox text={text} key={text + index.toString()} id={index} handler={editHandler} handleDrag={handleDrag} handleDrop={handleDrop}/>)
 
         data.push(<TextBox id={data.length + 1} handler={addHandler} key="newentry" isNew={true} />)
         

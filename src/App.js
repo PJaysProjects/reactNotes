@@ -12,10 +12,11 @@ import useKeypress from 'react-use-keypress';
 
 import * as THREE from 'three';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useContext } from 'react';
 
 import './App.css';
 import './datacontainer.css'
+import { createContext } from 'react';
 
 const test3dNode = {
   "nodes": [
@@ -85,7 +86,12 @@ const App = () => {
 
   const [currentCanvasState, setCanvasState] = useState(true)
 
+  const [currentDim,setDim] = useState(3)
 
+
+
+
+  /* const [currentInputTarget, setInputTarget] = useState(null) */
 
   //background colors are made way too bright by bloompass atm
   const colorTable = {
@@ -112,8 +118,9 @@ const App = () => {
   //keys
   const allowedKeys = ['n', 'c']
 
-  function testUp() {
+  function setKeypressNull() {
     setKeypress(null)
+    console.log('hey, I did try to set it null')
   }
 
   useKeypress(allowedKeys, (event) => {
@@ -159,9 +166,9 @@ const App = () => {
     /* console.log("keypress")
     console.log(currentKeyPress) */
     var queueObject = currentNodeQueue
-
-
-
+    //something is blocking my node from being clicked... I feel totally lost right now
+console.log(currentKeyPress)
+    console.log('definitely clicking')
     if (currentKeyPress === null) {
 
       var currentKeys = Object.keys(node)
@@ -219,6 +226,8 @@ const App = () => {
 
 
     }
+    //temporary solution for "stuck keypress" when typing in the text boxes
+    setKeypress(null)
   }
 
   //pretty stuff
@@ -246,10 +255,6 @@ const App = () => {
   function initialize(jsonObject) {
     return [jsonObject.nodes, jsonObject.links]
   }
-
-
-
-  
 
   function createNode(jsonObject) {
     var newIndex = jsonObject.nodes.length
@@ -385,14 +390,22 @@ const App = () => {
   }
 
   const handleTextareaChange = (event) => {
-    console.log('changing')
+    /* console.log('changing')
     console.log(event.target.value)
-    console.log(event.target.id)
+    console.log(event.target.id) */
     var id = event.target.id
-    var text = event.target.value
+    var text = event.target.textContent
     var node = currentNode
     node.notes[id].content = text
 
+  }
+
+  //combine this with the function above one day
+  const dragUpdater = (reference) => {
+
+    var node = currentNode
+    node.notes[reference.current.id].content = reference.current.textContent
+    //somehow... this alone was enough to make it work
   }
 
   //this untoggles buttons when another button is clicked
@@ -496,6 +509,29 @@ const App = () => {
 
   //custom functions
 
+  const handleNodeNameChange = (event) => {
+    /* setNodeName(event.target.value); */
+    if (currentNode != null) {
+      var node = currentNode
+
+      var newName = event.target.value
+      var newLabel = node.id + ": " + newName
+      node.name = newName
+      node.label = newLabel
+
+      setNodeName(newName)
+    }
+  };
+
+  const changeDimension = () =>{
+    if (currentDim == 3){
+      setDim(2)
+    }
+    if (currentDim == 2){
+      setDim(3)
+    }
+  }
+
   //string matcher
   const findAndSetColor = (searchString) => {
     var foundNodes = currentFoundList
@@ -564,8 +600,16 @@ const App = () => {
             <input type="checkbox" id="myCheckbox" name="myCheckbox" onChange={toggleLabels} />
 
           </div>
+          
+          {/* I love this of course, but it messes up right click for some reason<div >
 
-          <Overlay nodeName={currentNodeName} searchFunction={findAndSetColor} />
+            <label for="myCheckbox2" className='myCheckbox2'>Flatten?</label>
+
+            <input type="checkbox" id="myCheckbox2" name="myCheckbox2" onChange={changeDimension} />
+
+          </div> */}
+
+          <Overlay nodeName={currentNodeName} searchFunction={findAndSetColor} renameFunction={handleNodeNameChange} />
 
           <ButtonContainer buttonArray={currentButtons} buttonFunction={handleNotes} buttonHandler={handleButtonToggle} isActive={currentButtonToggles} />
 
@@ -573,11 +617,11 @@ const App = () => {
             <button >Save changes</button>
           </div> */}
 
-          <Scrollbox textEntries={currentText} editHandler={handleTextareaChange} addHandler={addHandler} toggler={currentContentToggle} />
+          <Scrollbox textEntries={currentText} editHandler={handleTextareaChange} addHandler={addHandler} toggler={currentContentToggle} dragUpdater={dragUpdater} />
 
         </div>
 
-        <div className='graphicscontainer' tabIndex={1} onKeyUp={testUp}>
+        <div className='graphicscontainer' tabIndex={1} onKeyUp={setKeypressNull}>
 
 
           <ForceGraph3D extraRenderers={css2renderGuy} ref={fgRef} graphData={jsonObject}
@@ -587,12 +631,12 @@ const App = () => {
             onBackgroundClick={handleNewNode}
 
 
-            numDimensions={3}
+            numDimensions={currentDim}
 
             nodeThreeObject={node => {
               const nodeEl = document.createElement('div');
               nodeEl.textContent = node.label;
-              nodeEl.style.color = '#e5e5e5';
+              nodeEl.style.color = colorMap.default;
               nodeEl.style.size = 30;
               { currentLabelToggle ? nodeEl.style.opacity = .65 : nodeEl.style.opacity = 0 }
 
@@ -628,3 +672,5 @@ const App = () => {
 }
 
 export default App;
+
+export const currentTextContext = createContext(currentText)

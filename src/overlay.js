@@ -1,6 +1,11 @@
 
-function Overlay({ nodeName, searchFunction }) {
 
+function Overlay({ nodeName, searchFunction, renameFunction}) {
+    
+    const blurControl = (event)=>{
+        event.target.value = null
+
+    }
 
     return (
         <div className='overlay'>
@@ -11,9 +16,9 @@ function Overlay({ nodeName, searchFunction }) {
                 </input>
                 {/* <button className="custombutton">Clear</button> */}
             </div>
-            <input type='text' className="currentnode" value={nodeName} placeholder="selected node name...">
+            <input type='text' className="currentnode" value={nodeName} placeholder="selected node name..." onChange={renameFunction} />
 
-            </input>
+            
         </div>
     )
 }
